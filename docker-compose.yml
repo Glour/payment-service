@@ -27,6 +27,8 @@ services:
 
   migrate:
     build: .
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/payments
     depends_on:
@@ -37,6 +39,8 @@ services:
 
   api:
     build: .
+    env_file:
+      - .env
     environment:
       API_KEY: dev-api-key
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/payments
@@ -56,6 +60,8 @@ services:
 
   consumer:
     build: .
+    env_file:
+      - .env
     environment:
       API_KEY: dev-api-key
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/payments
@@ -72,4 +78,3 @@ services:
 
 volumes:
   postgres_data:
-
