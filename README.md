@@ -28,7 +28,7 @@ app/
   workers/             FastStream consumer
 ```
 
-Payment creation uses an idempotency key. A new payment and the `payment.created` outbox event are committed together. The outbox publisher later sends the event to RabbitMQ with persistent delivery. The consumer processes the message, updates the payment status, sends a webhook, retries failed messages with exponential delay, and publishes final failures to a dead-letter queue.
+Payment creation uses an idempotency key. A new payment and the `payment.created` outbox event are committed together. The outbox publisher later sends the event to RabbitMQ with persistent delivery. The consumer processes the message, updates the payment status, sends a webhook, retries failed messages with exponential delay, and publishes final failures to the `payments.dead` dead-letter queue after 3 consumer attempts. `WEBHOOK_RETRY_ATTEMPTS` is kept separate and defaults to `1` so the assignment-level retry budget is controlled by message retries.
 
 ## Run with Docker
 
@@ -93,8 +93,8 @@ pytest -q
 - `OUTBOX_POLL_INTERVAL_SECONDS`: outbox polling interval
 - `OUTBOX_BATCH_SIZE`: outbox rows per publishing iteration
 - `WEBHOOK_TIMEOUT_SECONDS`: webhook request timeout
-- `WEBHOOK_RETRY_ATTEMPTS`: webhook retry count
-- `CONSUMER_RETRY_ATTEMPTS`: message attempts before dead-lettering
+- `WEBHOOK_RETRY_ATTEMPTS`: per-message HTTP delivery attempts for a webhook call
+- `CONSUMER_RETRY_ATTEMPTS`: message attempts before dead-lettering; defaults to 3
 - `GATEWAY_MIN_DELAY_SECONDS`, `GATEWAY_MAX_DELAY_SECONDS`: gateway emulation delay
 - `PAYMENT_SUCCESS_RATE`: gateway success probability
 - `SQL_ECHO`: SQLAlchemy query logging
@@ -139,4 +139,3 @@ Health:
 ```bash
 curl -i http://localhost:8000/health
 ```
-

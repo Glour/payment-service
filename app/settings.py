@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     outbox_poll_interval_seconds: float = Field(default=1.0, validation_alias="OUTBOX_POLL_INTERVAL_SECONDS")
     outbox_batch_size: int = Field(default=100, validation_alias="OUTBOX_BATCH_SIZE")
     webhook_timeout_seconds: float = Field(default=5.0, validation_alias="WEBHOOK_TIMEOUT_SECONDS")
-    webhook_retry_attempts: int = Field(default=3, validation_alias="WEBHOOK_RETRY_ATTEMPTS")
+    webhook_retry_attempts: int = Field(default=1, validation_alias="WEBHOOK_RETRY_ATTEMPTS")
     consumer_retry_attempts: int = Field(default=3, validation_alias="CONSUMER_RETRY_ATTEMPTS")
     gateway_min_delay_seconds: float = Field(default=2.0, validation_alias="GATEWAY_MIN_DELAY_SECONDS")
     gateway_max_delay_seconds: float = Field(default=5.0, validation_alias="GATEWAY_MAX_DELAY_SECONDS")
@@ -28,4 +28,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

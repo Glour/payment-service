@@ -27,5 +27,9 @@ class OutboxMessage(Base):
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
-Index("ix_outbox_unpublished", OutboxMessage.published_at, OutboxMessage.created_at)
-
+Index(
+    "ix_outbox_unpublished",
+    OutboxMessage.published_at,
+    OutboxMessage.created_at,
+    postgresql_where=OutboxMessage.published_at.is_(None),
+)

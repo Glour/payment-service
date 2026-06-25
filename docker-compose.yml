@@ -42,10 +42,10 @@ services:
     env_file:
       - .env
     environment:
-      API_KEY: dev-api-key
+      API_KEY: ${API_KEY:-dev-api-key}
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/payments
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      ENABLE_OUTBOX_PUBLISHER: "true"
+      ENABLE_OUTBOX_PUBLISHER: ${ENABLE_OUTBOX_PUBLISHER:-true}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -63,7 +63,7 @@ services:
     env_file:
       - .env
     environment:
-      API_KEY: dev-api-key
+      API_KEY: ${API_KEY:-dev-api-key}
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/payments
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
