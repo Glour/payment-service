@@ -68,6 +68,13 @@ async def test_payment_validation(client):
 
     response = await client.post(
         "/api/v1/payments",
+        headers={"X-API-Key": "test-api-key", "Idempotency-Key": "   "},
+        json=payment_payload(),
+    )
+    assert response.status_code == 400
+
+    response = await client.post(
+        "/api/v1/payments",
         headers={**API_HEADERS, "Idempotency-Key": "idem-invalid"},
         json=payment_payload(amount="-1.00"),
     )
@@ -118,4 +125,3 @@ async def test_get_payment_handles_auth_and_missing_payment(client):
         headers={"X-API-Key": "test-api-key"},
     )
     assert response.status_code == 404
-

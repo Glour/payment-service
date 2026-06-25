@@ -20,6 +20,7 @@ async def create_payment_endpoint(
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key", max_length=128),
     session: AsyncSession = Depends(get_session),
 ) -> PaymentAccepted:
+    idempotency_key = (idempotency_key or "").strip()
     if not idempotency_key:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Idempotency-Key header is required")
 
@@ -37,4 +38,3 @@ async def get_payment_endpoint(
     if payment is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
     return to_payment_read(payment)
-

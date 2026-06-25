@@ -1,6 +1,6 @@
 import asyncio
-from contextlib import asynccontextmanager, suppress
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 
@@ -39,4 +39,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
