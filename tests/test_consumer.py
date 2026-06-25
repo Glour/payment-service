@@ -1,8 +1,11 @@
+from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
 
+from app.db.session import SessionLocal
+from app.models import Currency, Payment, PaymentStatus
 from app.schemas.events import PaymentCreatedEvent
-from app.workers.payment_consumer import publish_retry_or_dead_letter
+from app.workers.payment_consumer import process_payment, publish_retry_or_dead_letter
 
 
 class RecordingBroker:
@@ -60,3 +63,49 @@ async def test_consumer_publishes_dead_letter_after_max_attempts(monkeypatch):
         "error": "boom",
     }
     assert broker.calls[0]["persist"] is True
+
+
+async def test_consumer_processes_payment_and_sends_webhook(monkeypatch):
+    payment_id = uuid4()
+    webhook_calls: list[object] = []
+
+    async with SessionLocal() as session:
+        async with session.begin():
+            session.add(
+                Payment(
+                    id=payment_id,
+                    amount=Decimal("99.90"),
+                    currency=Currency.EUR,
+                    payment_metadata={"order_id": "consumer-test"},
+                    status=PaymentStatus.PENDING,
+                    idempotency_key="consumer-process-test",
+                    webhook_url="https://example.com/webhook",
+                )
+            )
+
+    async def fake_gateway(settings):
+        return PaymentStatus.SUCCEEDED
+
+    async def fake_webhook(url, payload, settings):
+        webhook_calls.append((url, payload, settings))
+
+    monkeypatch.setattr("app.workers.payment_consumer.emulate_payment_gateway", fake_gateway)
+    monkeypatch.setattr("app.workers.payment_consumer.send_webhook", fake_webhook)
+
+    settings = SimpleNamespace(
+        gateway_min_delay_seconds=0,
+        gateway_max_delay_seconds=0,
+        payment_success_rate=1,
+    )
+    await process_payment(PaymentCreatedEvent(payment_id=payment_id), settings)
+
+    async with SessionLocal() as session:
+        payment = await session.get(Payment, payment_id)
+
+    assert payment is not None
+    assert payment.status == PaymentStatus.SUCCEEDED
+    assert payment.processed_at is not None
+    assert len(webhook_calls) == 1
+    assert webhook_calls[0][0] == "https://example.com/webhook"
+    assert webhook_calls[0][1].payment_id == payment_id
+    assert webhook_calls[0][1].status == PaymentStatus.SUCCEEDED

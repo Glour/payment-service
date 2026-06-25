@@ -2,7 +2,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
 
-from app.broker.topology import PAYMENT_CREATED_ROUTING_KEY, PAYMENTS_EXCHANGE
+from app.broker.topology import PAYMENTS_EXCHANGE
 from app.db.session import SessionLocal
 from app.models import Currency, OutboxMessage, Payment, PaymentStatus
 from app.outbox.publisher import publish_pending_once
@@ -51,7 +51,7 @@ async def test_publish_pending_once_publishes_persistently_and_marks_row():
     assert published == 1
     assert broker.calls[0]["message"] == payload
     assert broker.calls[0]["exchange"] == PAYMENTS_EXCHANGE
-    assert broker.calls[0]["routing_key"] == PAYMENT_CREATED_ROUTING_KEY
+    assert broker.calls[0]["routing_key"] == "payment.created"
     assert broker.calls[0]["persist"] is True
 
     async with SessionLocal() as session:

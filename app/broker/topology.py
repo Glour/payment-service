@@ -26,16 +26,6 @@ PAYMENTS_DEAD_QUEUE = (
 
 
 async def ensure_rabbitmq_topology(settings: Settings, broker: object | None = None) -> None:
-    if broker is not None and RabbitQueue is not None and RabbitExchange is not None:
-        declare_exchange = getattr(broker, "declare_exchange", None)
-        declare_queue = getattr(broker, "declare_queue", None)
-        if callable(declare_exchange):
-            await declare_exchange(PAYMENTS_EXCHANGE)
-        if callable(declare_queue):
-            await declare_queue(PAYMENTS_NEW_QUEUE)
-            await declare_queue(PAYMENTS_DEAD_QUEUE)
-            return
-
     import aio_pika
 
     connection = await aio_pika.connect_robust(settings.rabbitmq_url)
@@ -45,4 +35,3 @@ async def ensure_rabbitmq_topology(settings: Settings, broker: object | None = N
         new_queue = await channel.declare_queue(PAYMENTS_NEW_QUEUE_NAME, durable=True)
         await new_queue.bind(exchange, routing_key=PAYMENT_CREATED_ROUTING_KEY)
         await channel.declare_queue(PAYMENTS_DEAD_QUEUE_NAME, durable=True)
-

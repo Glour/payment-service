@@ -5,7 +5,7 @@ from contextlib import suppress
 from faststream.rabbit import RabbitBroker
 
 from app.broker.publisher import publish_persistent
-from app.broker.topology import PAYMENT_CREATED_ROUTING_KEY, PAYMENTS_EXCHANGE, ensure_rabbitmq_topology
+from app.broker.topology import PAYMENTS_EXCHANGE, ensure_rabbitmq_topology
 from app.db.session import SessionLocal
 from app.repositories.outbox import OutboxRepository
 from app.settings import Settings, get_settings
@@ -25,7 +25,7 @@ async def publish_pending_once(settings: Settings, broker: object, batch_size: i
                     message.payload,
                     queue="",
                     exchange=PAYMENTS_EXCHANGE,
-                    routing_key=PAYMENT_CREATED_ROUTING_KEY,
+                    routing_key=message.routing_key,
                 )
                 repository.mark_published(message)
             return len(messages)
